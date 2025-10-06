@@ -119,6 +119,7 @@ export const LevelModal: React.FC<Props> = ({
     }
   };
 
+
   return (
     <Modal
       animationType="fade"
@@ -197,11 +198,24 @@ export const LevelModal: React.FC<Props> = ({
                         },
                       ]}
                     >
+                       {getRewardForLevel(level) ? (
+                      <Text
+                        style={[
+                          styles.rewardText,
+                          shouldBeColored
+                            ? styles.levelTextHighlighted
+                            : styles.levelTextInactive,
+                        ]}
+                      >
+                        {getRewardForLevel(level)}
+                      </Text>
+                    ) : (
                       <Text
                         style={[styles.levelText, styles.levelTextHighlighted]}
                       >
-                        {/* Level {level} */}
+                        Level {level}
                       </Text>
+                    )}
                     </Animated.View>
                   );
                 }

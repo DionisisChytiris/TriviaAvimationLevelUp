@@ -38,6 +38,7 @@ export const useQuiz = () => {
         );
       }, 600);
     } else {
+      
       dispatch(
         showModal({
           title: "Wrong answer",
@@ -45,6 +46,7 @@ export const useQuiz = () => {
           success: false,
         })
       );
+
     }
   };
 

@@ -13,15 +13,15 @@ const Quiz = () => {
 
   const q = questions[quiz.currentQuestionIndex];
 
-  // useEffect(() => {
-  //   if (modal.visible) {
-  //     const timer = setTimeout(() => {
-  //       closeModalNow();
-  //     }, 4000); // auto-hide after 4s
+  useEffect(() => {
+    if (modal.visible) {
+      const timer = setTimeout(() => {
+        closeModalNow();
+      }, 4000); // auto-hide after 4s
 
-  //     return () => clearTimeout(timer); // cleanup if modal closes earlier
-  //   }
-  // }, [modal.visible, closeModalNow]);
+      return () => clearTimeout(timer); // cleanup if modal closes earlier
+    }
+  }, [modal.visible, closeModalNow]);
 
   useEffect(() => {
     // could add loadCoins() here if needed
