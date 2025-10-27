@@ -7,7 +7,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Dimensions,
-  ScrollView,
   Animated,
   Easing,
 } from "react-native";
@@ -32,6 +31,22 @@ type Props = {
 };
 
 const windowHeight = Dimensions.get("window").height;
+// Compute row height so all 10 rows fit within the modal without scrolling
+const rowsCount = 10;
+const containerHeight = windowHeight * 0.82; // matches styles.container.height
+const containerVerticalPadding = theme.spacing.md * 2;
+const levelsWrapVerticalMargin = theme.spacing.sm * 2;
+const levelsInnerPaddingBottom = theme.spacing.md;
+const perRowVerticalMargin = theme.spacing.xs * 2;
+const availableForRows =
+  containerHeight -
+  containerVerticalPadding -
+  levelsWrapVerticalMargin -
+  levelsInnerPaddingBottom;
+const rowHeight = Math.max(
+  36,
+  Math.floor((availableForRows - perRowVerticalMargin * rowsCount) / rowsCount)
+);
 
 export const LevelModal: React.FC<Props> = ({
   visible,
@@ -46,10 +61,35 @@ export const LevelModal: React.FC<Props> = ({
   // Animated value for highlighted level scale
   const highlightScale = useRef(new Animated.Value(0.4)).current;
   const highlightOpacity = useRef(new Animated.Value(0)).current;
+  // Modal container entrance animation
+  const containerTranslate = useRef(new Animated.Value(20)).current;
+  const containerOpacity = useRef(new Animated.Value(0)).current;
   // small delay controller
   const startAnimTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const prevHighlightedLevel = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (visible) {
+      Animated.parallel([
+        Animated.timing(containerOpacity, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(containerTranslate, {
+          toValue: 0,
+          duration: 320,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      containerOpacity.setValue(0);
+      containerTranslate.setValue(20);
+    }
+  }, [visible, containerOpacity, containerTranslate]);
 
   useEffect(() => {
     if (startAnimTimer.current) {
@@ -106,6 +146,7 @@ export const LevelModal: React.FC<Props> = ({
     };
   }, [visible, highlightedLevel, highlightOpacity, highlightScale]);
 
+
   const getRewardForLevel = (level: number) => {
     switch (level) {
       case 3:
@@ -119,7 +160,6 @@ export const LevelModal: React.FC<Props> = ({
     }
   };
 
-
   return (
     <Modal
       animationType="fade"
@@ -128,7 +168,7 @@ export const LevelModal: React.FC<Props> = ({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <View style={styles.container}>
+        <Animated.View style={[styles.container, { opacity: containerOpacity, transform: [{ translateY: containerTranslate }] }]}>
           {/* <View style={styles.header}>
             <View style={styles.headerLeft}>
               <Ionicons
@@ -163,10 +203,7 @@ export const LevelModal: React.FC<Props> = ({
           </TouchableOpacity>
 
           <View style={styles.levelsWrap}>
-            <ScrollView
-              contentContainerStyle={styles.levelsInner}
-              showsVerticalScrollIndicator={false}
-            >
+            <View style={styles.levelsInner}>
               {levels.map((level) => {
                 const isHighlighted = highlightedLevel === level;
 
@@ -198,40 +235,30 @@ export const LevelModal: React.FC<Props> = ({
                         },
                       ]}
                     >
-                       {getRewardForLevel(level) ? (
-                      <Text
-                        style={[
-                          styles.rewardText,
-                          shouldBeColored
-                            ? styles.levelTextHighlighted
-                            : styles.levelTextInactive,
-                        ]}
-                      >
-                        {getRewardForLevel(level)}
-                      </Text>
-                    ) : (
-                      <Text
-                        style={[styles.levelText, styles.levelTextHighlighted]}
-                      >
-                        Level {level}
-                      </Text>
-                    )}
+                      {getRewardForLevel(level) ? (
+                        <Text
+                          style={[
+                            styles.rewardText,
+                            shouldBeColored
+                              ? styles.levelTextHighlighted
+                              : styles.levelTextInactive,
+                          ]}
+                        >
+                          {getRewardForLevel(level)}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={[styles.levelText, styles.levelTextHighlighted]}
+                        >
+                          Level {level}
+                        </Text>
+                      )}
                     </Animated.View>
                   );
                 }
 
                 return (
                   <View key={level} style={[styles.levelRow, backgroundStyle]}>
-                    {/* <Text
-                      style={[
-                        styles.levelText,
-                        shouldBeColored
-                          ? styles.levelTextHighlighted
-                          : styles.levelTextInactive,
-                      ]}
-                    >
-                      Level {level}
-                    </Text> */}
                     {getRewardForLevel(level) ? (
                       <Text
                         style={[
@@ -258,7 +285,7 @@ export const LevelModal: React.FC<Props> = ({
                   </View>
                 );
               })}
-            </ScrollView>
+            </View>
           </View>
 
           {/* {modalInfo?.rewardCoins ? (
@@ -274,7 +301,7 @@ export const LevelModal: React.FC<Props> = ({
           <View style={styles.footerNote}>
             <Text style={styles.noteText}>This modal will close automatically.</Text>
           </View> */}
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );
@@ -337,12 +364,11 @@ const styles = StyleSheet.create({
     marginVertical: theme.spacing.sm,
   },
   levelsInner: {
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
     paddingBottom: theme.spacing.md,
   },
   levelRow: {
-    height: Math.max(44, Math.round((windowHeight - 360) / 12)),
-    // height: 50,
+    height: rowHeight,
     borderRadius: theme.radii.sm,
     marginVertical: theme.spacing.xs,
     justifyContent: "center",
@@ -360,10 +386,10 @@ const styles = StyleSheet.create({
   },
   levelTextHighlighted: {
     color: theme.colors.onPrimary,
-    zIndex: 999
+    zIndex: 999,
   },
   levelReward: {
-    backgroundColor: 'rgba(0,200,83,0.2)',
+    backgroundColor: "rgba(0,200,83,0.2)",
   },
   levelTextInactive: {
     color: theme.colors.text,

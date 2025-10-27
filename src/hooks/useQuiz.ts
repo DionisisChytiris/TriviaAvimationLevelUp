@@ -1,6 +1,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
-import { nextQuestion, setLevel } from "../redux/slices/quizSlice";
+import {
+  nextQuestion,
+  setLevel,
+  resetQuiz,
+  toggleCoinAnim,
+} from "../redux/slices/quizSlice";
 import { showModal, hideModal } from "../redux/slices/modalSlice";
 import { incrementCoins } from "../redux/slices/coinsSlice";
 
@@ -13,18 +18,26 @@ export const useQuiz = () => {
   const answerQuestion = (wasCorrect: boolean) => {
     if (wasCorrect) {
       const reward =
-        quiz.currentLevel === 3
+        quiz.currentLevel === 2
           ? 10
-          : quiz.currentLevel === 6
+          : quiz.currentLevel === 5
           ? 20
-          : quiz.currentLevel === 10
+          : quiz.currentLevel === 9
           ? 50
-          : 5; // ✅ fallback reward
+          : 0; // ✅ fallback reward
 
       setTimeout(() => {
         dispatch(setLevel(quiz.currentLevel + 1));
         dispatch(incrementCoins(reward));
-      }, 2000);
+        if (reward) {
+          dispatch(toggleCoinAnim(true));
+
+          // 🕒 stop animation after 1.5 seconds
+          setTimeout(() => {
+            dispatch(toggleCoinAnim(false));
+          }, 1500);
+        }
+      }, 3000);
 
       setTimeout(() => {
         dispatch(
@@ -38,7 +51,6 @@ export const useQuiz = () => {
         );
       }, 600);
     } else {
-      
       dispatch(
         showModal({
           title: "Wrong answer",
@@ -46,7 +58,6 @@ export const useQuiz = () => {
           success: false,
         })
       );
-
     }
   };
 
@@ -55,5 +66,11 @@ export const useQuiz = () => {
     dispatch(nextQuestion());
   };
 
-  return { quiz, modal, coins, answerQuestion, closeModalNow };
+  const restartQuiz = () => {
+    // Keep coins by default; just reset quiz progress and close any open modal
+    dispatch(hideModal());
+    dispatch(resetQuiz());
+  };
+
+  return { quiz, modal, coins, answerQuestion, closeModalNow, restartQuiz };
 };

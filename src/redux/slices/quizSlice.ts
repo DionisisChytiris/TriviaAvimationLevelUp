@@ -14,6 +14,7 @@ interface QuizState {
   showModal: boolean;
   modalInfo?: ModalInfo;
   highlightedLevel?: number;
+  coinAnimVisible: boolean;
 }
 
 const initialState: QuizState = {
@@ -23,6 +24,7 @@ const initialState: QuizState = {
   showModal: false,
   modalInfo: undefined,
   highlightedLevel: undefined,
+  coinAnimVisible: false,
 };
 
 const quizSlice = createSlice({
@@ -37,6 +39,10 @@ const quizSlice = createSlice({
       state.lastColoredLevel = action.payload;
     },
     resetQuiz: () => initialState,
+
+    toggleCoinAnim: (state, action: PayloadAction<boolean>) => {
+      state.coinAnimVisible = action.payload;
+    },
 
     // 🔹 Modal reducers
     openModal: (
@@ -55,11 +61,6 @@ const quizSlice = createSlice({
   },
 });
 
-export const {
-  nextQuestion,
-  setLevel,
-  resetQuiz,
-  openModal,
-  closeModal,
-} = quizSlice.actions;
+export const { nextQuestion, setLevel, resetQuiz, openModal, closeModal,toggleCoinAnim } =
+  quizSlice.actions;
 export default quizSlice.reducer;
